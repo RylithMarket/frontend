@@ -1,6 +1,12 @@
 "use client";
 
-import { useCreateVault } from "@/hooks/use-core-contracts";
+import { useCreateVault, useDepositAsset } from "@/hooks/use-core-contracts";
+import {
+  useCreateKiosk,
+  useListVault,
+  useGetOwnedKiosks,
+  useDelistVault,
+} from "@/hooks/use-marketplace";
 import {
   ConnectModal,
   useConnectWallet,
@@ -13,14 +19,26 @@ export function Test() {
   const { isConnected } = useCurrentWallet();
   const currentAccount = useCurrentAccount();
   const [open, setOpen] = useState(false);
-  const { mutate: connect } = useConnectWallet();
-  const createVaultMutation = useCreateVault();
 
-  const handleCreateVault = () => {
-    createVaultMutation.mutate({
-      name: "My First Vault",
-      description: "This is a test vault",
-      strategyType: "conservative",
+  const createKioskMutation = useCreateKiosk();
+  const listVaultMutation = useListVault();
+  const unlistVaultMutation = useDelistVault();
+  const { data: ownedKiosks } = useGetOwnedKiosks({
+    payload: currentAccount?.address,
+    options: { enabled: !!currentAccount?.address },
+  });
+
+  const handleListVault = () => {
+    const kioskId = ownedKiosks?.kioskIds[0];
+    if (!kioskId) {
+      console.error("No kiosk found");
+      return;
+    }
+
+    unlistVaultMutation.mutate({
+      kioskId,
+      itemId:
+        "0x7a9cf50f02871d1fc3a16890b0abcf33f34d81082a9fbe91960d47acbebcf768",
     });
   };
 
@@ -38,5 +56,23 @@ export function Test() {
       />
     );
   }
-  return <button onClick={handleCreateVault}>Create Vault</button>;
+  return (
+    <div>
+      <div>
+        {ownedKiosks?.kioskIds[0] && <p>✓ Kiosk: {ownedKiosks?.kioskIds[0]}</p>}
+      </div>
+
+      <div>
+        <button
+          onClick={handleListVault}
+          disabled={listVaultMutation.isPending}
+        >
+          {listVaultMutation.isPending ? "Listing..." : "Delist Vault"}
+        </button>
+        {listVaultMutation.data && (
+          <p>✓ Listed: {listVaultMutation.data.slice(0, 10)}...</p>
+        )}
+      </div>
+    </div>
+  );
 }

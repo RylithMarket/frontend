@@ -9,7 +9,6 @@ import {
   useSuiClient,
   useCurrentAccount,
 } from "@mysten/dapp-kit";
-import { SuiObjectData, SuiObjectResponse } from "@mysten/sui/client";
 import { VAULT_CONTRACT } from "@/constants";
 import { HookProps, MutationHooksOptions, QueryHookOptions } from "./types";
 import { Transaction } from "@mysten/sui/transactions";
@@ -24,6 +23,7 @@ interface DepositAssetPayload {
   vaultId: string;
   assetId: string;
   assetName: string;
+  assetType: string;
 }
 
 interface WithdrawAssetPayload {
@@ -117,6 +117,7 @@ export function useDepositAsset({
 
       tx.moveCall({
         target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::deposit_asset`,
+        typeArguments: [payload.assetType],
         arguments: [
           tx.object(payload.vaultId),
           tx.object(payload.assetId),
