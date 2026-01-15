@@ -267,6 +267,11 @@ export function useDelistVault({
           itemId: payload.itemId,
           itemType: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::StrategyVault`,
         })
+        .transfer({
+          itemId: payload.itemId,
+          itemType: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::StrategyVault`,
+          address: currentAccount.address,
+        })
         .finalize();
 
       return new Promise((resolve, reject) => {

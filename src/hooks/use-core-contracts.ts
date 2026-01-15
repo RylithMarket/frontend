@@ -386,6 +386,15 @@ export function useBorrowMutAsset({
 
       const tx = new Transaction();
 
+      console.log("Payload in useBorrowMutAsset:", {
+        target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::borrow_mut_asset`,
+        arguments: [
+          tx.object(payload.vaultId),
+          tx.pure.string(payload.assetName),
+        ],
+        typeArguments: [payload.assetType],
+      });
+      
       const [assetRef] = tx.moveCall({
         target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::borrow_mut_asset`,
         arguments: [

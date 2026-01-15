@@ -1,5 +1,6 @@
 "use client";
 
+import { useCetusRemoveLiquidityFromVault } from "@/hooks/use-cetus";
 import {
   useCreateVault,
   useDepositAsset,
@@ -35,6 +36,8 @@ export function Test() {
     payload:
       "0x7a9cf50f02871d1fc3a16890b0abcf33f34d81082a9fbe91960d47acbebcf768",
   });
+  const cetusRemoveLiqudityFromVaultMutation =
+    useCetusRemoveLiquidityFromVault();
 
   const handleListVault = () => {
     const kioskId = ownedKiosks?.kioskIds[0];
@@ -50,6 +53,25 @@ export function Test() {
     });
   };
 
+  const handleRemoveLiquidity = () => {
+    cetusRemoveLiqudityFromVaultMutation.mutate({
+      vaultId:
+        "0x7a9cf50f02871d1fc3a16890b0abcf33f34d81082a9fbe91960d47acbebcf768",
+      positionName: "cetus_lp_position",
+      poolId:
+        "0xc0b2d0d3ef3851f176235953616cd7799bede294a828ce3871ef110447859a78",
+      positionId:
+        "0xde24f378ecd23cad4c80730de808580a07c223d76961e511b776c44a6cad7151",
+      coinTypeA:
+        "a1ec7fc00a6f40db9693ad1415d0c193ad3906494428cf252621037bd7117e29::usdc::USDC",
+      coinTypeB:
+        "0000000000000000000000000000000000000000000000000000000000000002::sui::SUI",
+      deltaLiquidity: "65173",
+      minAmountA: "0",
+      minAmountB: "0",
+    });
+  };
+  
   if (!isConnected) {
     return (
       <ConnectModal
@@ -67,21 +89,8 @@ export function Test() {
 
   return (
     <div>
-      {isVaultLoading ? (
-        <p>Loading vault data...</p>
-      ) : vault ? (
-        <div>
-          <h2>Vault Data:</h2>
-          <p>ID: {vault.id}</p>
-          <p>Name: {vault.name}</p>
-          <p>Description: {vault.description}</p>
-          <p>Strategy Type: {vault.strategyType}</p>
-          <p>Created At: {new Date(vault.createdAt).toLocaleString()}</p>
-          <p>Owner: {vault.owner}</p>
-        </div>
-      ) : (
-        <p>No vault data found.</p>
-      )}
+      <button onClick={handleListVault}>Delist Vault</button>
+      <button onClick={handleRemoveLiquidity}>Remove Liquidity</button>
     </div>
   );
 }
