@@ -245,15 +245,16 @@ export function useDelistVault({
   const queryClient = useQueryClient();
   const currentAccount = useCurrentAccount();
 
-  if (!currentAccount) {
-    throw new Error("No connected account");
-  }
-
   return useMutation({
     mutationFn: async (payload: DelistVaultPayload) => {
+      if (!currentAccount) {
+        throw new Error("No connected account");
+      }
+
       const { kioskOwnerCaps } = await kioskClient.getOwnedKiosks({
         address: currentAccount.address,
       });
+
       const tx = new Transaction();
       const kioskTx = new KioskTransaction({
         transaction: tx,
@@ -352,6 +353,61 @@ export function useGetOwnedKiosks({
       }
     },
     enabled: !!ownerAddress,
+    ...options,
+  });
+}
+
+interface ListedVaultItem {
+  kioskId: string;
+  itemId: string;
+  type: string;
+  price: bigint;
+  isListed: boolean;
+}
+
+export function useGetAllListedVaults({
+  options,
+}: HookProps<void, QueryHookOptions<ListedVaultItem[]>> = {}): UseQueryResult<
+  ListedVaultItem[]
+> {
+  const suiClient = useSuiClient();
+
+  return useQuery({
+    queryKey: ["all-listed-vaults"],
+    queryFn: async () => {
+      try {
+        const vaultType = `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::StrategyVault`;
+        const eventType = `0x2::kiosk::ItemListed<${vaultType}>`;
+
+        const objects = await suiClient.queryEvents({
+          query: {
+            MoveEventType: eventType,
+          },
+          limit: 1000,
+        });
+
+        const allListedItems: ListedVaultItem[] = [];
+
+        for (const event of objects.data) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const parsedJson = event.parsedJson as any;
+          if (parsedJson?.kiosk_id && parsedJson?.item_id) {
+            allListedItems.push({
+              kioskId: parsedJson.kiosk,
+              itemId: parsedJson.item_id,
+              type: vaultType,
+              price: BigInt(parsedJson.price || 0),
+              isListed: true,
+            });
+          }
+        }
+
+        return allListedItems;
+      } catch (error) {
+        console.error("Error fetching listed vaults:", error);
+        throw error;
+      }
+    },
     ...options,
   });
 }

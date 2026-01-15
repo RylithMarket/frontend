@@ -46,6 +46,13 @@ interface AssetInfo {
   exists: boolean;
 }
 
+interface BorrowAssetPayload {
+  vaultId: string;
+  assetName: string;
+  assetType: string;
+  action?: (tx: Transaction, assetRef: unknown) => void;
+}
+
 export function useCreateVault({
   options,
 }: HookProps<
@@ -233,7 +240,7 @@ export function useVaultData({
       if (!vaultId) return null;
 
       try {
-        const obj = await client.getObject({
+        const objRes = await client.getObject({
           id: vaultId,
           options: {
             showContent: true,
@@ -241,18 +248,20 @@ export function useVaultData({
           },
         });
 
-        if (obj.data?.content?.dataType === "moveObject") {
-          const fields = obj.data.content.fields as Record<string, unknown>;
+        if (!objRes.data) return null;
+
+        const obj = objRes.data;
+
+        if (obj?.content?.dataType === "moveObject") {
+          const fields = obj.content.fields as Record<string, unknown>;
           return {
             id: vaultId,
             name: (fields.name as string) || "",
             description: (fields.description as string) || "",
             strategyType: (fields.strategy_type as string) || "",
             createdAt: (fields.created_at as number) || 0,
-            owner:
-              obj.data?.owner && "AddressOwner" in obj.data.owner
-                ? (obj.data.owner.AddressOwner as string)
-                : "",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            owner: (obj.owner as any).ObjectOwner || "",
           };
         }
 
@@ -357,6 +366,52 @@ export function useVaultsByOwner({
     },
     enabled: !!ownerAddress,
     ...options,
+  });
+}
+
+export function useBorrowMutAsset({
+  options,
+}: HookProps<
+  BorrowAssetPayload,
+  MutationHooksOptions<string, Error, BorrowAssetPayload>
+> = {}): UseMutationResult<string, Error, BorrowAssetPayload> {
+  const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const currentAccount = useCurrentAccount();
+
+  return useMutation({
+    mutationFn: async (payload: BorrowAssetPayload) => {
+      if (!currentAccount) {
+        throw new Error("No connected account");
+      }
+
+      const tx = new Transaction();
+
+      const [assetRef] = tx.moveCall({
+        target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::borrow_mut_asset`,
+        arguments: [
+          tx.object(payload.vaultId),
+          tx.pure.string(payload.assetName),
+        ],
+        typeArguments: [payload.assetType],
+      });
+
+      if (payload.action) {
+        payload.action(tx, assetRef);
+      }
+
+      return new Promise((resolve, reject) => {
+        signAndExecute(
+          { transaction: tx },
+          {
+            onSuccess: (result) => {
+              resolve(result.digest);
+            },
+            onError: reject,
+          }
+        );
+      });
+    },
+    ...options?.options,
   });
 }
 
