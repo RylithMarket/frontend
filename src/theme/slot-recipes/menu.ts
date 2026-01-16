@@ -1,4 +1,4 @@
-import { defineSlotRecipe } from "@chakra-ui/react"
+import { defineSlotRecipe } from "@chakra-ui/react";
 
 export const menuSlotRecipe = defineSlotRecipe({
   className: "chakra-menu",
@@ -22,7 +22,7 @@ export const menuSlotRecipe = defineSlotRecipe({
   base: {
     content: {
       outline: 0,
-      "--menu-bg": "colors.bg.panel",
+      "--menu-bg": "colors.bg.subtle",
       bg: "var(--menu-bg)",
       boxShadow: "lg",
       color: "fg",
@@ -156,4 +156,4 @@ export const menuSlotRecipe = defineSlotRecipe({
     size: "md",
     variant: "subtle",
   },
-})
+});

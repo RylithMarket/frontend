@@ -9,7 +9,7 @@ export const buttonRecipe = defineRecipe({
     justifyContent: "center",
     userSelect: "none",
     position: "relative",
-    borderRadius: "l2",
+    borderRadius: "full",
     whiteSpace: "nowrap",
     verticalAlign: "middle",
     borderWidth: "1px",
@@ -134,12 +134,11 @@ export const buttonRecipe = defineRecipe({
         },
       },
       surface: {
-        bg: "colorPalette.subtle",
+        bg: "colorPalette.subtle/50",
         color: "colorPalette.fg",
-        shadow: "0 0 0px 1px var(--shadow-color)",
-        shadowColor: "colorPalette.muted",
+        borderColor: "colorPalette.fg",
         _hover: {
-          bg: "colorPalette.muted",
+          bg: "colorPalette.muted/50",
         },
         _expanded: {
           bg: "colorPalette.muted",

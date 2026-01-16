@@ -11,7 +11,7 @@ export const colors = defineSemanticTokens.colors({
     subtle: {
       value: {
         _light: "{colors.gray.50}",
-        _dark: "{colors.gray.950}",
+        _dark: "#282830",
       },
     },
     muted: {

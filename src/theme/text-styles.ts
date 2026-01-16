@@ -66,14 +66,14 @@ export const textStyles = defineTextStyles({
   "6xl": {
     value: {
       fontSize: "6xl",
-      lineHeight: "4.5rem",
+      lineHeight: "5rem",
       letterSpacing: "-0.025em",
     },
   },
   "7xl": {
     value: {
       fontSize: "7xl",
-      lineHeight: "5.75rem",
+      lineHeight: "6rem",
       letterSpacing: "-0.025em",
     },
   },
