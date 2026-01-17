@@ -13,6 +13,7 @@ import { useBorrowMutAsset } from "./use-core-contracts";
 import { cetusSdk } from "@/utils/cetusSdk";
 import { RemoveLiquidityParams } from "@cetusprotocol/sui-clmm-sdk";
 import { VAULT_CONTRACT } from "@/constants";
+import { toaster } from "@/components/ui/toaster";
 
 interface RemoveLiquidityFromVaultPayload {
   vaultId: string;
@@ -87,8 +88,8 @@ export function useCetusRemoveLiquidityFromVault({
         arguments: [
           tx.object(globalConfig),
           tx.object(payload.poolId),
-          position, // Vẫn là object position đó
-          tx.pure.bool(false), // ref_fee (thường để false)
+          position,
+          tx.pure.bool(false),
         ],
         typeArguments: [payload.coinTypeA, payload.coinTypeB],
       });
@@ -124,10 +125,33 @@ export function useCetusRemoveLiquidityFromVault({
           { transaction: tx },
           {
             onSuccess: (result) => {
+              toaster.create({
+                title: "Success",
+                description: "Liquidity removed successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
               resolve(result.digest);
             },
-            onError: reject,
-          }
+            onSettled: () => {
+              queryClient.invalidateQueries({ queryKey: ["vault"] });
+              queryClient.invalidateQueries({ queryKey: ["vault-asset"] });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to remove liquidity",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
+          },
         );
       });
     },
@@ -157,6 +181,7 @@ export function useCetusAddLiquidityToVault({
 > = {}): UseMutationResult<string, Error, AddLiquidityToVaultPayload> {
   const { mutateAsync: signAndExecute } = useSignAndExecuteTransaction();
   const currentAccount = useCurrentAccount();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: AddLiquidityToVaultPayload) => {
@@ -231,8 +256,40 @@ export function useCetusAddLiquidityToVault({
 
       tx.transferObjects([coinA_Change, coinB_Change], currentAccount.address);
 
-      const result = await signAndExecute({ transaction: tx });
-      return result.digest;
+      return new Promise<string>((resolve, reject) => {
+        signAndExecute(
+          { transaction: tx },
+          {
+            onSuccess: (result) => {
+              toaster.create({
+                title: "Success",
+                description: "Liquidity added successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
+              resolve(result.digest);
+            },
+            onSettled: () => {
+              queryClient.invalidateQueries({ queryKey: ["vault"] });
+              queryClient.invalidateQueries({ queryKey: ["vault-asset"] });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to add liquidity",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
+          },
+        );
+      });
     },
     ...options?.options,
   });

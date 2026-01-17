@@ -5,6 +5,8 @@ export const DEFILLAMA_API_URL =
   process.env.NEXT_PUBLIC_DEFILLAMA_API_URL || "https://coins.llama.fi";
 export const SUI_EXPLORER_URL =
   process.env.NEXT_PUBLIC_SUI_EXPLORER_URL || "https://suiscan.xyz/testnet";
+export const ROOT_DOMAIN =
+  process.env.NEXT_PUBLIC_RYLITH_ROOT_DOMAIN || "rylith.space";
 
 // Core Contract Configuration
 export const CORE_PACKAGE_ID =

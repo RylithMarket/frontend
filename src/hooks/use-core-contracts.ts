@@ -2,6 +2,7 @@ import {
   useMutation,
   UseMutationResult,
   useQuery,
+  useQueryClient,
   UseQueryResult,
 } from "@tanstack/react-query";
 import {
@@ -12,6 +13,7 @@ import {
 import { VAULT_CONTRACT } from "@/constants";
 import { HookProps, MutationHooksOptions, QueryHookOptions } from "./types";
 import { Transaction } from "@mysten/sui/transactions";
+import { toaster } from "@/components/ui/toaster";
 
 interface CreateVaultPayload {
   name: string;
@@ -63,6 +65,7 @@ export function useCreateVault({
 > = {}): UseMutationResult<string, Error, CreateVaultPayload> {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   const currentAccount = useCurrentAccount();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: CreateVaultPayload) => {
@@ -101,9 +104,32 @@ export function useCreateVault({
           { transaction: tx },
           {
             onSuccess: (result) => {
+              toaster.create({
+                title: "Success",
+                description: "Vault created successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
               resolve(result.digest);
             },
-            onError: reject,
+            onSettled: () => {
+              queryClient.invalidateQueries({ queryKey: ["vaults"] });
+              queryClient.invalidateQueries({ queryKey: ["vault"] });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to create vault",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });
@@ -119,6 +145,7 @@ export function useDepositAsset({
   MutationHooksOptions<string, Error, DepositAssetPayload>
 > = {}): UseMutationResult<string, Error, DepositAssetPayload> {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: DepositAssetPayload) => {
@@ -143,9 +170,34 @@ export function useDepositAsset({
           { transaction: tx },
           {
             onSuccess: (result) => {
+              toaster.create({
+                title: "Success",
+                description: "Asset deposited successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
               resolve(result.digest);
             },
-            onError: reject,
+            onSettled: () => {
+              queryClient.invalidateQueries({
+                queryKey: ["vault", payload.vaultId],
+              });
+              queryClient.invalidateQueries({ queryKey: ["vault-asset"] });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to deposit asset",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });
@@ -161,6 +213,7 @@ export function useWithdrawAsset({
   MutationHooksOptions<string, Error, WithdrawAssetPayload>
 > = {}): UseMutationResult<string, Error, WithdrawAssetPayload> {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: WithdrawAssetPayload) => {
@@ -190,9 +243,34 @@ export function useWithdrawAsset({
           { transaction: tx },
           {
             onSuccess: (result) => {
+              toaster.create({
+                title: "Success",
+                description: "Asset withdrawn successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
               resolve(result.digest);
             },
-            onError: reject,
+            onSettled: () => {
+              queryClient.invalidateQueries({
+                queryKey: ["vault", payload.vaultId],
+              });
+              queryClient.invalidateQueries({ queryKey: ["vault-asset"] });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to withdraw asset",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });
@@ -208,6 +286,7 @@ export function useDestroyVault({
   MutationHooksOptions<void, Error, string>
 > = {}): UseMutationResult<void, Error, string> {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (vaultId: string) => {
@@ -223,9 +302,32 @@ export function useDestroyVault({
           { transaction: tx },
           {
             onSuccess: () => {
+              toaster.create({
+                title: "Success",
+                description: "Vault destroyed successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
               resolve();
             },
-            onError: reject,
+            onSettled: () => {
+              queryClient.invalidateQueries({ queryKey: ["vaults"] });
+              queryClient.invalidateQueries({ queryKey: ["vault"] });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to destroy vault",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });
@@ -386,6 +488,7 @@ export function useBorrowMutAsset({
 > = {}): UseMutationResult<string, Error, BorrowAssetPayload> {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   const currentAccount = useCurrentAccount();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (payload: BorrowAssetPayload) => {
@@ -422,9 +525,34 @@ export function useBorrowMutAsset({
           { transaction: tx },
           {
             onSuccess: (result) => {
+              toaster.create({
+                title: "Success",
+                description: "Asset borrowed successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
               resolve(result.digest);
             },
-            onError: reject,
+            onSettled: () => {
+              queryClient.invalidateQueries({
+                queryKey: ["vault", payload.vaultId],
+              });
+              queryClient.invalidateQueries({ queryKey: ["vault-asset"] });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to borrow asset",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });

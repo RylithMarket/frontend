@@ -10,6 +10,7 @@ import {
 import { getFullnodeUrl } from "@mysten/sui/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider as UIProvider } from "@/components/ui/provider";
+import { Toaster } from "@/components/ui/toaster";
 
 const { networkConfig } = createNetworkConfig({
   testnet: {
@@ -27,7 +28,10 @@ export default function Provider({ children }: { children: React.ReactNode }) {
         defaultNetwork={NETWORK as any}
       >
         <WalletProvider autoConnect>
-          <UIProvider>{children}</UIProvider>
+          <UIProvider>
+            <Toaster />
+            {children}
+          </UIProvider>
         </WalletProvider>
       </SuiClientProvider>
     </QueryClientProvider>

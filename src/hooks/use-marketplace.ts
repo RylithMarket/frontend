@@ -20,6 +20,7 @@ import {
   KioskTransaction,
   OwnedKiosks,
 } from "@mysten/kiosk";
+import { toaster } from "@/components/ui/toaster";
 
 interface ListVaultPayload {
   kioskId?: string;
@@ -117,10 +118,32 @@ export function useCreateKiosk({
           { transaction: tx },
           {
             onSuccess: (result) => {
-              queryClient.invalidateQueries({ queryKey: ["kiosks"] });
+              toaster.create({
+                title: "Success",
+                description: "Kiosk created successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
               resolve(result.digest);
             },
-            onError: reject,
+            onSettled: () => {
+              queryClient.invalidateQueries({ queryKey: ["kiosks"] });
+              queryClient.invalidateQueries({ queryKey: ["owned-kiosks"] });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to create kiosk",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });
@@ -203,12 +226,36 @@ export function useListVault({
           { transaction: tx },
           {
             onSuccess: (result) => {
-              queryClient.invalidateQueries({
-                queryKey: ["kiosk-items", kioskId],
+              toaster.create({
+                title: "Success",
+                description: "Vault listed for sale successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
               });
               resolve(result.digest);
             },
-            onError: reject,
+            onSettled: () => {
+              queryClient.invalidateQueries({
+                queryKey: ["kiosk-items", kioskId],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["all-listed-vaults"],
+              });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to list vault",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });
@@ -276,13 +323,34 @@ export function usePurchaseVault({
           { transaction: tx },
           {
             onSuccess: (result) => {
+              toaster.create({
+                title: "Success",
+                description: "Vault purchased successfully",
+                type: "success",
+                duration: 4000,
+                closable: true,
+              });
+              resolve(result.digest);
+            },
+            onSettled: () => {
               queryClient.invalidateQueries({ queryKey: ["kiosk-items"] });
               queryClient.invalidateQueries({
                 queryKey: ["all-listed-vaults"],
               });
-              resolve(result.digest);
             },
-            onError: reject,
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to purchase vault",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });
@@ -335,12 +403,36 @@ export function useDelistVault({
           { transaction: tx },
           {
             onSuccess: (result) => {
-              queryClient.invalidateQueries({
-                queryKey: ["kiosk-items", kioskOwnerCaps[0].kioskId],
+              toaster.create({
+                title: "Success",
+                description: "Vault removed from sale",
+                type: "success",
+                duration: 4000,
+                closable: true,
               });
               resolve(result.digest);
             },
-            onError: reject,
+            onSettled: () => {
+              queryClient.invalidateQueries({
+                queryKey: ["kiosk-items", kioskOwnerCaps[0].kioskId],
+              });
+              queryClient.invalidateQueries({
+                queryKey: ["all-listed-vaults"],
+              });
+            },
+            onError: (error) => {
+              toaster.create({
+                title: "Error",
+                description:
+                  error instanceof Error
+                    ? error.message
+                    : "Failed to delist vault",
+                type: "error",
+                duration: 4000,
+                closable: true,
+              });
+              reject(error);
+            },
           },
         );
       });
@@ -475,6 +567,7 @@ export function useGetAllListedVaults({
         const processedItems = new Set<string>();
 
         for (const event of allEvents) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const parsedJson = event.parsedJson as any;
 
           const kioskId = parsedJson?.kiosk;
