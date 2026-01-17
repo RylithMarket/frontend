@@ -11,9 +11,11 @@ import {
   Image,
   VStack,
   Text,
-  Link,
+  Link as ChakraLink,
   Flex,
   Skeleton,
+  LinkOverlay,
+  LinkBox,
 } from "@chakra-ui/react";
 import { useState } from "react";
 
@@ -114,13 +116,13 @@ function Details({
   ...props
 }: { vault: VaultData; listing: ListedVaultItem } & StackProps) {
   return (
-    <VStack w={"full"} {...props}>
+    <VStack w={"full"} align={"start"} {...props}>
       <Text fontSize={"lg"} fontWeight={"medium"}>
         {vault.name} @
         {
-          <Link href={`${SUI_EXPLORER_URL}/object/${vault.id}`}>
+          <ChakraLink href={`${SUI_EXPLORER_URL}/object/${vault.id}`}>
             {formatAddress(vault.id)}
-          </Link>
+          </ChakraLink>
         }
       </Text>
       <Flex
@@ -154,6 +156,8 @@ export function ListedVaultCard({ listing, ...props }: Props) {
         rounded={"3xl"}
         gap={"4"}
         align={"center"}
+        maxW={"md"}
+        w={"full"}
         {...props}
       >
         <Skeleton width={["16", "32"]} height={["16", "32"]} rounded={"3xl"} />
@@ -166,17 +170,28 @@ export function ListedVaultCard({ listing, ...props }: Props) {
   }
 
   return (
-    <HStack
+    <LinkBox
+      as={HStack}
       bg={"bg.subtle/50"}
       h={"fit"}
       p={"2"}
       rounded={"3xl"}
       gap={"4"}
       align={"center"}
+      cursor={"pointer"}
+      transition={"all 0.2s ease"}
+      maxW={"md"}
+      w={"full"}
+      _hover={{
+        bg: "bg.subtle",
+        transform: "translateY(-2px)",
+        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+      }}
       {...props}
     >
       <VaultImage vault={vault} />
       <Details vault={vault} listing={listing} />
-    </HStack>
+      <LinkOverlay href={`/app/vaults/${vault.id}`} />
+    </LinkBox>
   );
 }

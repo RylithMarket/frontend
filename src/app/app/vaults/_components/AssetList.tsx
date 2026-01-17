@@ -21,7 +21,7 @@ export function AssetList({
   if (error) {
     return (
       <VStack w={"full"} gap={4} align={"stretch"} {...props}>
-        <Text fontSize={"lg"} fontWeight={"bold"} color={"red.500"}>
+        <Text fontSize={"lg"} fontWeight={"bold"} color={"error.fg"}>
           Error loading assets
         </Text>
         <Text fontSize={"sm"} color={"fg.muted"}>
@@ -43,7 +43,7 @@ export function AssetList({
     <VStack w={"full"} gap={"8"} {...props}>
       {isLoading
         ? Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton key={index} w={"100%"} h={"80px"} borderRadius={"md"} />
+            <Skeleton key={index} w={"full"} h={"80px"} borderRadius={"md"} />
           ))
         : positions?.map((asset) => (
             <AssetCard 

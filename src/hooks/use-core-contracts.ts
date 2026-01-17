@@ -10,6 +10,7 @@ import {
   useSuiClient,
   useCurrentAccount,
 } from "@mysten/dapp-kit";
+import { useRouter } from "next/navigation";
 import { VAULT_CONTRACT } from "@/constants";
 import { HookProps, MutationHooksOptions, QueryHookOptions } from "./types";
 import { Transaction } from "@mysten/sui/transactions";
@@ -26,6 +27,8 @@ interface DepositAssetPayload {
   assetId: string;
   assetName: string;
   assetType: string;
+  amount?: string;
+  decimals?: number;
 }
 
 interface WithdrawAssetPayload {
@@ -66,6 +69,7 @@ export function useCreateVault({
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
   const currentAccount = useCurrentAccount();
   const queryClient = useQueryClient();
+  const suiClient = useSuiClient();
 
   return useMutation({
     mutationFn: async (payload: CreateVaultPayload) => {
@@ -103,15 +107,27 @@ export function useCreateVault({
         signAndExecute(
           { transaction: tx },
           {
-            onSuccess: (result) => {
-              toaster.create({
-                title: "Success",
-                description: "Vault created successfully",
-                type: "success",
-                duration: 4000,
-                closable: true,
-              });
-              resolve(result.digest);
+            onSuccess: async (result) => {
+              // Fetch created vaults to get the new vault ID
+              try {
+                await new Promise((sleep) => setTimeout(sleep, 1000)); // Wait for indexing
+
+                const userVaults = await suiClient.getOwnedObjects({
+                  owner: currentAccount.address,
+                  filter: {
+                    StructType: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::StrategyVault`,
+                  },
+                });
+
+                const newVaultId = userVaults.data[0]?.data?.objectId;
+                if (newVaultId) {
+                  resolve(newVaultId);
+                } else {
+                  resolve(result.digest);
+                }
+              } catch (error) {
+                resolve(result.digest);
+              }
             },
             onSettled: () => {
               queryClient.invalidateQueries({ queryKey: ["vaults"] });
@@ -150,17 +166,36 @@ export function useDepositAsset({
   return useMutation({
     mutationFn: async (payload: DepositAssetPayload) => {
       const tx = new Transaction();
+      const decimals = payload.decimals || 9;
+
+      const amountBigInt = BigInt(
+        Math.floor(Number(payload.amount) * Math.pow(10, decimals)),
+      );
+
+      const isSui = payload.assetType.includes("0x2::sui::SUI");
+
+      let coinToDeposit;
+
+      if (isSui) {
+        [coinToDeposit] = tx.splitCoins(tx.gas, [tx.pure.u64(amountBigInt)]);
+      } else {
+        [coinToDeposit] = tx.splitCoins(tx.object(payload.assetId), [
+          tx.pure.u64(amountBigInt),
+        ]);
+      }
+
+      let objectType = payload.assetType;
+      if (!objectType.includes("::coin::Coin")) {
+        objectType = `0x2::coin::Coin<${payload.assetType}>`;
+      }
 
       tx.moveCall({
         target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::deposit_asset`,
-        typeArguments: [payload.assetType],
+        typeArguments: [objectType],
         arguments: [
           tx.object(payload.vaultId),
-          tx.object(payload.assetId),
-          tx.pure.vector(
-            "u8",
-            Array.from(new TextEncoder().encode(payload.assetName)),
-          ),
+          coinToDeposit,
+          tx.pure.string(payload.assetName),
           tx.object("0x6"),
         ],
       });
@@ -183,6 +218,7 @@ export function useDepositAsset({
               queryClient.invalidateQueries({
                 queryKey: ["vault", payload.vaultId],
               });
+              queryClient.invalidateQueries({ queryKey: ["user-coins"] });
               queryClient.invalidateQueries({ queryKey: ["vault-asset"] });
             },
             onError: (error) => {

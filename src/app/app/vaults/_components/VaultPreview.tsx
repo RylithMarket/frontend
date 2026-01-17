@@ -25,14 +25,15 @@ export function VaultPreview({ vault, isLoading = false, ...props }: Props) {
         {...props}
       >
         <Skeleton
+          maxW={"64"}
           w={"full"}
-          maxW={"400px"}
+          minW={"sm"}
+          maxWidth={"md"}
           aspectRatio={"1 / 1"}
           borderRadius={"3xl"}
         />
         <Skeleton w={"200px"} h={"24px"} />
         <Skeleton w={"300px"} h={"60px"} />
-        <Skeleton w={"full"} h={"40px"} borderRadius={"md"} />
       </VStack>
     );
   }
@@ -47,12 +48,19 @@ export function VaultPreview({ vault, isLoading = false, ...props }: Props) {
       {...props}
     >
       {imageLoading && (
-        <Skeleton w={"full"} maxW={"400px"} h={"300px"} borderRadius={"3xl"} />
+        <Skeleton
+          maxW={"64"}
+          w={"full"}
+          minW={"sm"}
+          maxWidth={"md"}
+          aspectRatio={"1 / 1"}
+          borderRadius={"3xl"}
+        />
       )}
       <Image
         src={vault.imgUrl || `/vaults/${vault.id}/image.png`}
         alt={vault.name}
-        maxW={"400px"}
+        maxW={"64"}
         w={"full"}
         minW={"sm"}
         maxWidth={"md"}

@@ -43,12 +43,13 @@ function extractSubdomain(request: NextRequest): string | null {
   return isSubdomain ? hostname.split(".")[0] : null;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") || "";
 
   const subdomain = extractSubdomain(request);
-  console.log("Subdomain:", subdomain);
+
+
   if (!subdomain) {
     if (pathname.startsWith("/app")) {
       const url = request.nextUrl.clone();
@@ -88,8 +89,8 @@ export async function middleware(request: NextRequest) {
   return NextResponse.rewrite(url);
 }
 
-export default middleware;
-
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|assets).*)"],
+  matcher: [
+    "/((?!api|_next/static|_next/image|favicon.ico|assets|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg|.*\\.webp|.*\\.css|.*\\.js|.*\\.woff|.*\\.woff2).*)",
+  ],
 };

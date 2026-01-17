@@ -11,6 +11,7 @@ import {
   StackProps,
   VStack,
 } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler } from "react-hook-form";
 
 interface Inputs {
@@ -21,6 +22,7 @@ interface Inputs {
 
 interface Props extends StackProps {}
 export function MintVaultForm(props: Props) {
+  const router = useRouter();
   const {
     register,
     handleSubmit,

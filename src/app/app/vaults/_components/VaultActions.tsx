@@ -36,7 +36,7 @@ export function VaultActions({ vault }: Props) {
   };
 
   return (
-    <HStack w={"full"} gap={3}>
+    <HStack w={"full"} justify={"center"} gap={3}>
       {isListed ? (
         <Button
           variant={"outline"}

@@ -14,7 +14,6 @@ import {
   ButtonProps,
   HStack,
   Icon,
-  Image,
   MenuRootProps,
   StackProps,
   Text,
@@ -24,9 +23,11 @@ import {
   useAutoConnectWallet,
   useCurrentAccount,
   useCurrentWallet,
+  useDisconnectWallet,
 } from "@mysten/dapp-kit";
 import { useSuiBalance } from "@/hooks/use-sui";
 import { FaAngleDown } from "react-icons/fa";
+import { AiOutlineDisconnect } from "react-icons/ai";
 
 interface Props extends ButtonProps {}
 export function ConnectWallet(props: Props) {
@@ -57,12 +58,7 @@ export function ConnectWallet(props: Props) {
 interface WrapperProps extends StackProps {}
 export function WrapperMenu(props: WrapperProps) {
   return (
-    <HStack
-      p={"1"}
-      bg={"bg.subtle/75"}
-      rounded={"2xl"}
-      {...props}
-    >
+    <HStack p={"1"} bg={"bg.subtle/75"} rounded={"2xl"} {...props}>
       <BalanceMenu />
       <ProfileMenu />
     </HStack>
@@ -86,9 +82,7 @@ export function BalanceMenu(props: BalanceProps) {
           src={"https://s2.coinmarketcap.com/static/img/coins/64x64/20947.png"}
         />
       </AvatarRoot>
-      <Text fontWeight="medium">
-        {balance?.formatted || "0.00"} SUI
-      </Text>
+      <Text fontWeight="medium">{balance?.formatted || "0.00"} SUI</Text>
     </HStack>
   );
 }
@@ -96,6 +90,7 @@ interface ProfileProps extends Omit<MenuRootProps, "children"> {}
 export function ProfileMenu(props: ProfileProps) {
   const currentAccount = useCurrentAccount();
   const { currentWallet } = useCurrentWallet();
+  const disconnectMutation = useDisconnectWallet();
 
   if (!currentAccount) {
     return null;
@@ -131,7 +126,16 @@ export function ProfileMenu(props: ProfileProps) {
         </HStack>
       </MenuTrigger>
       <MenuContent>
-        <MenuItem value="disconnect">Disconnect</MenuItem>
+        <MenuItem
+          p={"2"}
+          bg={"transparent"}
+          cursor={"pointer"}
+          value="disconnect"
+          onSelect={() => disconnectMutation.mutate()}
+        >
+          Disconnect
+          <Icon as={AiOutlineDisconnect} />
+        </MenuItem>
       </MenuContent>
     </MenuRoot>
   );

@@ -5,6 +5,7 @@ import {
   HTMLChakraProps,
   Icon,
   IconButton,
+  Stack,
   VStack,
 } from "@chakra-ui/react";
 import Link from "next/link";
@@ -21,12 +22,20 @@ export function Navbar(props: Props) {
   ];
 
   const isActive = (href: string) => {
-    return pathname.startsWith(href);
+    const normalizedPathname = pathname.replace(/^\/app/, "") || "/";
+    const normalizedHref = href.replace(/^\/app/, "") || "/";
+    return normalizedPathname.startsWith(normalizedHref);
   };
 
   return (
-    <chakra.nav w="fit" pl="4" pr={"32"} py="4" {...props}>
-      <VStack>
+    <chakra.nav
+      w={["fit", "fit", "fit"]}
+      pl={["2", "4", "4"]}
+      pr={["2", "8", "16", "32"]}
+      py={["2", "4", "4"]}
+      {...props}
+    >
+      <Stack gap={"4"} direction={["row", "row", "column", "column"]}>
         {items.map((item) => (
           <IconButton
             key={item.label}
@@ -36,6 +45,7 @@ export function Navbar(props: Props) {
             _hover={{ bg: "bg.subtle", color: "fg" }}
             border={isActive(item.href) ? "1px solid" : "none"}
             borderColor={"fg.subtle"}
+            size={["sm", "md", "md"]}
             asChild
           >
             <Link href={item.href}>
@@ -43,7 +53,7 @@ export function Navbar(props: Props) {
             </Link>
           </IconButton>
         ))}
-      </VStack>
+      </Stack>
     </chakra.nav>
   );
 }

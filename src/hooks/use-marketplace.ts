@@ -237,7 +237,7 @@ export function useListVault({
             },
             onSettled: () => {
               queryClient.invalidateQueries({
-                queryKey: ["kiosk-items", kioskId],
+                queryKey: ["kiosk-items"],
               });
               queryClient.invalidateQueries({
                 queryKey: ["all-listed-vaults"],

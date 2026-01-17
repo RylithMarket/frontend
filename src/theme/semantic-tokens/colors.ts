@@ -90,7 +90,7 @@ export const colors = defineSemanticTokens.colors({
     },
     error: {
       value: {
-        _light: "{colors.red.500}",
+        _light: "{colors.error.fg}",
         _dark: "{colors.red.400}",
       },
     },
@@ -146,7 +146,7 @@ export const colors = defineSemanticTokens.colors({
     },
     error: {
       value: {
-        _light: "{colors.red.500}",
+        _light: "{colors.error.fg}",
         _dark: "{colors.red.400}",
       },
     },
@@ -258,13 +258,13 @@ export const colors = defineSemanticTokens.colors({
     },
     focusRing: {
       value: {
-        _light: "{colors.red.500}",
-        _dark: "{colors.red.500}",
+        _light: "{colors.error.fg}",
+        _dark: "{colors.error.fg}",
       },
     },
     border: {
       value: {
-        _light: "{colors.red.500}",
+        _light: "{colors.error.fg}",
         _dark: "{colors.red.400}",
       },
     },

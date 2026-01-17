@@ -1,15 +1,7 @@
 "use client";
 
 import { useGetVaultById } from "@/hooks/use-rylith-api";
-import {
-  Box,
-  HStack,
-  Image,
-  Skeleton,
-  StackProps,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
+import { Skeleton, StackProps, VStack } from "@chakra-ui/react";
 import { AssetList } from "./AssetList";
 
 interface Props extends StackProps {
@@ -23,33 +15,15 @@ export function VaultDetail({ vaultId, ...props }: Props) {
 
   if (isLoading) {
     return (
-      <VStack w={"full"} gap={6} align={"stretch"} {...props}>
-        <HStack gap={6} align={"flex-start"}>
-          <VStack flex={1} gap={4}>
-            <Skeleton w={"100%"} h={"300px"} borderRadius={"lg"} />
-            <Skeleton w={"100%"} h={"200px"} borderRadius={"lg"} />
-          </VStack>
-          <VStack flex={1} gap={4}>
-            <Skeleton w={"100%"} h={"80px"} borderRadius={"lg"} />
-            <Skeleton w={"100%"} h={"80px"} borderRadius={"lg"} />
-            <Skeleton w={"100%"} h={"80px"} borderRadius={"lg"} />
-          </VStack>
-        </HStack>
-        <VStack gap={4}>
-          <Skeleton w={"100%"} h={"80px"} borderRadius={"lg"} />
-          <Skeleton w={"100%"} h={"80px"} borderRadius={"lg"} />
-          <Skeleton w={"100%"} h={"80px"} borderRadius={"lg"} />
-        </VStack>
+      <VStack w={"full"} gap={4} align={"stretch"} {...props}>
+        <Skeleton h={"100px"} borderRadius={"lg"} />
+        <Skeleton h={"100px"} borderRadius={"lg"} />
       </VStack>
     );
   }
 
   if (!vault) {
-    return (
-      <VStack w={"full"} gap={4} align={"stretch"} {...props}>
-        <Text color={"fg.muted"}>Vault not found</Text>
-      </VStack>
-    );
+    return null;
   }
 
   return (

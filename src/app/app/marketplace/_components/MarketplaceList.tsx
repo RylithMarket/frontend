@@ -15,7 +15,7 @@ export function MarketplaceList(props: Props) {
   if (error) {
     return (
       <VStack w={"full"} h={"full"} justify={"center"} align={"center"} gap={4}>
-        <Text fontSize={"lg"} fontWeight={"bold"} color={"red.500"}>
+        <Text fontSize={"lg"} fontWeight={"bold"} color={"error.fg"}>
           Error loading marketplace
         </Text>
         <Text fontSize={"sm"} color={"fg.muted"}>
@@ -37,14 +37,14 @@ export function MarketplaceList(props: Props) {
     <Grid
       w={"full"}
       h={"full"}
-      templateColumns={["1fr", "repeat(2, 1fr)", "repeat(3, 1fr)"]}
+      templateColumns="repeat(auto-fit, minmax(min(100%, 350px), 1fr))"
       gap={["4", "5", "6"]}
       autoRows="max-content"
       {...props}
     >
       {isLoading
         ? Array.from({ length: 12 }).map((_, index) => (
-            <Skeleton key={index} w={"100%"} h={"120px"} borderRadius={"2xl"} />
+            <Skeleton key={index} w={"full"} h={"120px"} borderRadius={"2xl"} />
           ))
         : listedVaults?.map((listing, index) => (
             <ListedVaultCard key={index} listing={listing} />
