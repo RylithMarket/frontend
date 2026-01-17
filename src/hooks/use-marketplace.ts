@@ -34,11 +34,10 @@ interface PurchaseVaultPayload {
 }
 
 interface DelistVaultPayload {
-  kioskId: string;
   itemId: string;
 }
 
-interface KioskItemDetail {
+export interface KioskItemDetail {
   objectId: string;
   kioskId: string;
   type: string;
@@ -50,6 +49,45 @@ interface KioskItemDetail {
 
 interface CreateKioskPayload {
   name?: string;
+}
+
+const ROYALTY_BPS = 150;
+const MIN_ROYALTY_AMOUNT = 100_000;
+const SUI_DECIMALS = 9;
+function calculateRoyaltyAmount(price: bigint): bigint {
+  const expectedAmount = (price * BigInt(ROYALTY_BPS)) / BigInt(10_000);
+  return expectedAmount > BigInt(MIN_ROYALTY_AMOUNT)
+    ? expectedAmount
+    : BigInt(MIN_ROYALTY_AMOUNT);
+}
+
+async function getSuiCoinsForPayment(
+  suiClient: ReturnType<typeof useSuiClient>,
+  userAddress: string,
+  requiredAmount: bigint,
+) {
+  const coins = await suiClient.getCoins({
+    owner: userAddress,
+    coinType: "0x2::sui::SUI",
+  });
+
+  const availableCoins = coins.data || [];
+  const selectedCoins: typeof availableCoins = [];
+  let totalAmount = BigInt(0);
+
+  for (const coin of availableCoins) {
+    if (totalAmount >= requiredAmount) break;
+    selectedCoins.push(coin);
+    totalAmount += BigInt(coin.balance);
+  }
+
+  if (totalAmount < requiredAmount) {
+    throw new Error(
+      `Insufficient SUI balance. Required: ${requiredAmount}, Available: ${totalAmount}`,
+    );
+  }
+
+  return selectedCoins;
 }
 
 export function useCreateKiosk({
@@ -83,7 +121,7 @@ export function useCreateKiosk({
               resolve(result.digest);
             },
             onError: reject,
-          }
+          },
         );
       });
     },
@@ -171,7 +209,7 @@ export function useListVault({
               resolve(result.digest);
             },
             onError: reject,
-          }
+          },
         );
       });
     },
@@ -186,21 +224,35 @@ export function usePurchaseVault({
   MutationHooksOptions<string, Error, PurchaseVaultPayload>
 > = {}): UseMutationResult<string, Error, PurchaseVaultPayload> {
   const { mutate: signAndExecute } = useSignAndExecuteTransaction();
-  const suiClient = useSuiClient();
+  const createKioskMutation = useCreateKiosk();
   const currentAccount = useCurrentAccount();
   const queryClient = useQueryClient();
 
-  if (!currentAccount) {
-    throw new Error("No connected account");
-  }
-
   return useMutation({
     mutationFn: async (payload: PurchaseVaultPayload) => {
-      const { kioskOwnerCaps } = await kioskClient.getOwnedKiosks({
+      if (!currentAccount) throw new Error("No connected account");
+
+      const price = BigInt(payload.price.toString());
+
+      let { kioskOwnerCaps, kioskIds } = await kioskClient.getOwnedKiosks({
         address: currentAccount.address,
       });
 
+      if (kioskIds.length === 0 || kioskOwnerCaps.length === 0) {
+        await createKioskMutation.mutateAsync({});
+        const result = await kioskClient.getOwnedKiosks({
+          address: currentAccount.address,
+        });
+        kioskIds = result.kioskIds;
+        kioskOwnerCaps = result.kioskOwnerCaps;
+      }
+
       const tx = new Transaction();
+
+      const [royaltyCoin] = tx.splitCoins(tx.gas, [
+        tx.pure.u64(MIN_ROYALTY_AMOUNT),
+      ]);
+
       const kioskTx = new KioskTransaction({
         transaction: tx,
         kioskClient,
@@ -208,10 +260,13 @@ export function usePurchaseVault({
       });
 
       await kioskTx.purchaseAndResolve({
-        itemType: `${VAULT_CONTRACT.packageId}:${VAULT_CONTRACT.moduleName}::StrategyVault`,
+        itemType: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::StrategyVault`,
         sellerKiosk: payload.kioskId,
         itemId: payload.itemId,
-        price: BigInt(payload.price.toString()),
+        price: price,
+        extraArgs: {
+          royaltyPayment: royaltyCoin,
+        },
       });
 
       kioskTx.finalize();
@@ -221,13 +276,14 @@ export function usePurchaseVault({
           { transaction: tx },
           {
             onSuccess: (result) => {
+              queryClient.invalidateQueries({ queryKey: ["kiosk-items"] });
               queryClient.invalidateQueries({
-                queryKey: ["kiosk-items", payload.kioskId],
+                queryKey: ["all-listed-vaults"],
               });
               resolve(result.digest);
             },
             onError: reject,
-          }
+          },
         );
       });
     },
@@ -280,12 +336,12 @@ export function useDelistVault({
           {
             onSuccess: (result) => {
               queryClient.invalidateQueries({
-                queryKey: ["kiosk-items", payload.kioskId],
+                queryKey: ["kiosk-items", kioskOwnerCaps[0].kioskId],
               });
               resolve(result.digest);
             },
             onError: reject,
-          }
+          },
         );
       });
     },
@@ -362,12 +418,13 @@ export function useGetOwnedKiosks({
   });
 }
 
-interface ListedVaultItem {
+export interface ListedVaultItem {
   kioskId: string;
   itemId: string;
   type: string;
   price: bigint;
   isListed: boolean;
+  timestampMs: number;
 }
 
 export function useGetAllListedVaults({
@@ -382,32 +439,71 @@ export function useGetAllListedVaults({
     queryFn: async () => {
       try {
         const vaultType = `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::StrategyVault`;
-        const eventType = `0x2::kiosk::ItemListed<${vaultType}>`;
 
-        const objects = await suiClient.queryEvents({
-          query: {
-            MoveEventType: eventType,
-          },
-          limit: 1000,
-        });
+        const eventTypes = {
+          listed: `0x2::kiosk::ItemListed<${vaultType}>`,
+          delisted: `0x2::kiosk::ItemDelisted<${vaultType}>`,
+          purchased: `0x2::kiosk::ItemPurchased<${vaultType}>`,
+        };
 
-        const allListedItems: ListedVaultItem[] = [];
+        const [listedEvents, delistedEvents, purchasedEvents] =
+          await Promise.all([
+            suiClient.queryEvents({
+              query: { MoveEventType: eventTypes.listed },
+              limit: 1000,
+              order: "descending",
+            }),
+            suiClient.queryEvents({
+              query: { MoveEventType: eventTypes.delisted },
+              limit: 1000,
+              order: "descending",
+            }),
+            suiClient.queryEvents({
+              query: { MoveEventType: eventTypes.purchased },
+              limit: 1000,
+              order: "descending",
+            }),
+          ]);
 
-        for (const event of objects.data) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const allEvents = [
+          ...listedEvents.data.map((e) => ({ ...e, type: "LISTED" })),
+          ...delistedEvents.data.map((e) => ({ ...e, type: "DELISTED" })),
+          ...purchasedEvents.data.map((e) => ({ ...e, type: "PURCHASED" })),
+        ].sort((a, b) => Number(b.timestampMs) - Number(a.timestampMs));
+
+        const activeItems: ListedVaultItem[] = [];
+        const processedItems = new Set<string>();
+
+        for (const event of allEvents) {
           const parsedJson = event.parsedJson as any;
-          if (parsedJson?.kiosk_id && parsedJson?.item_id) {
-            allListedItems.push({
-              kioskId: parsedJson.kiosk,
-              itemId: parsedJson.item_id,
+
+          const kioskId = parsedJson?.kiosk;
+          const itemId = parsedJson?.id;
+
+          if (!kioskId || !itemId) continue;
+
+          const uniqueKey = `${kioskId}-${itemId}`;
+
+          if (processedItems.has(uniqueKey)) {
+            continue;
+          }
+
+          processedItems.add(uniqueKey);
+
+          if (event.type === "LISTED") {
+            activeItems.push({
+              kioskId: kioskId,
+              itemId: itemId,
               type: vaultType,
               price: BigInt(parsedJson.price || 0),
               isListed: true,
+              timestampMs: Number(event.timestampMs),
             });
           }
         }
 
-        return allListedItems;
+        console.log("Active listed vaults:", activeItems);
+        return activeItems;
       } catch (error) {
         console.error("Error fetching listed vaults:", error);
         throw error;

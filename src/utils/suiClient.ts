@@ -1,4 +1,4 @@
-import { CORE_PACKAGE_ID, MARKETPLACE_PACKAGE_ID, NETWORK } from "@/constants";
+import { MARKETPLACE_PACKAGE_ID, NETWORK } from "@/constants";
 import { KioskClient, Network, RuleResolvingParams } from "@mysten/kiosk";
 import { getFullnodeUrl, SuiClient } from "@mysten/sui/client";
 
@@ -9,13 +9,6 @@ export const suiClient = new SuiClient({
   url: getFullnodeUrl(NETWORK as any),
 });
 
-/**
- * KioskClient instance for interacting with Sui Kiosks
- * Provides methods for:
- * - Querying kiosks and their items
- * - Building kiosk transactions
- * - Managing transfer policies
- */
 export const kioskClient = new KioskClient({
   client: suiClient,
   network: networkKiosk,

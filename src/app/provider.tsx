@@ -26,7 +26,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
         networks={networkConfig}
         defaultNetwork={NETWORK as any}
       >
-        <WalletProvider>
+        <WalletProvider autoConnect>
           <UIProvider>{children}</UIProvider>
         </WalletProvider>
       </SuiClientProvider>

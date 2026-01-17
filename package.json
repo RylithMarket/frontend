@@ -17,6 +17,7 @@
     "@mysten/kiosk": "^0.14.6",
     "@mysten/sui": "^1.45.2",
     "@tanstack/react-query": "^5.90.16",
+    "@vercel/og": "^0.8.6",
     "axios": "^1.13.2",
     "bn.js": "^5.2.2",
     "next": "16.1.1",
@@ -24,7 +25,9 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.0",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "satori": "^0.19.1",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@chakra-ui/cli": "^3.31.0",

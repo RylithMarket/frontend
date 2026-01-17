@@ -1,6 +1,10 @@
 export const NETWORK = process.env.NEXT_PUBLIC_NETWORK || "testnet";
 export const RYLITH_API_URL =
   process.env.NEXT_PUBLIC_RYLITH_API_URL || "http://localhost:8080";
+export const DEFILLAMA_API_URL =
+  process.env.NEXT_PUBLIC_DEFILLAMA_API_URL || "https://coins.llama.fi";
+export const SUI_EXPLORER_URL =
+  process.env.NEXT_PUBLIC_SUI_EXPLORER_URL || "https://suiscan.xyz/testnet";
 
 // Core Contract Configuration
 export const CORE_PACKAGE_ID =
@@ -15,7 +19,7 @@ export const VAULT_CONTRACT = {
 // Marketplace Contract Configuration
 export const MARKETPLACE_PACKAGE_ID =
   process.env.NEXT_PUBLIC_MARKETPLACE_PACKAGE_ID ||
-  "0xccb4413dc994b079201db4dd0f91e8472618e8f5a5e3bc60a7ac831fa4181107";
+  "0x96864f16919c535ee0a4ddc1948492f38a9d2eb4c0caa98076efaca772555d24";
 
 export const MARKETPLACE_CONTRACT = {
   packageId: MARKETPLACE_PACKAGE_ID,
@@ -24,7 +28,7 @@ export const MARKETPLACE_CONTRACT = {
 
 export const MARKETPLACE_OBJECTS = {
   transferPolicy:
-    "0xc78436a44352c8f784f47dc6ca436a69c6271fbef1d1f51c5746ad14dc8811ac",
+    "0xf2f0a61adaadc27dac432412bf54fa5b7fb484de240d9008d520d2478764d0ff",
   transferPolicyCap:
-    "0xdf6c193c3a1289649a93c8ecdd51b62e624cd1663ee290ce6cfacadedb2f587b",
+    "0x4cb2fee78f20e6bca915b97d3c53beb5c759d4b50a5a12aa778dd6ed4c43dad9",
 };

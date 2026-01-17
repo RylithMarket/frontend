@@ -29,6 +29,8 @@ interface DepositAssetPayload {
 interface WithdrawAssetPayload {
   vaultId: string;
   assetName: string;
+  assetType: string;
+  ownerAddress: string;
 }
 
 interface VaultData {
@@ -75,15 +77,15 @@ export function useCreateVault({
         arguments: [
           tx.pure.vector(
             "u8",
-            Array.from(new TextEncoder().encode(payload.name))
+            Array.from(new TextEncoder().encode(payload.name)),
           ),
           tx.pure.vector(
             "u8",
-            Array.from(new TextEncoder().encode(payload.description))
+            Array.from(new TextEncoder().encode(payload.description)),
           ),
           tx.pure.vector(
             "u8",
-            Array.from(new TextEncoder().encode(payload.strategyType))
+            Array.from(new TextEncoder().encode(payload.strategyType)),
           ),
           tx.object("0x6"),
         ],
@@ -102,7 +104,7 @@ export function useCreateVault({
               resolve(result.digest);
             },
             onError: reject,
-          }
+          },
         );
       });
     },
@@ -130,7 +132,7 @@ export function useDepositAsset({
           tx.object(payload.assetId),
           tx.pure.vector(
             "u8",
-            Array.from(new TextEncoder().encode(payload.assetName))
+            Array.from(new TextEncoder().encode(payload.assetName)),
           ),
           tx.object("0x6"),
         ],
@@ -144,7 +146,7 @@ export function useDepositAsset({
               resolve(result.digest);
             },
             onError: reject,
-          }
+          },
         );
       });
     },
@@ -164,16 +166,23 @@ export function useWithdrawAsset({
     mutationFn: async (payload: WithdrawAssetPayload) => {
       const tx = new Transaction();
 
-      tx.moveCall({
+      const [asset] = tx.moveCall({
         target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::withdraw_asset`,
+        typeArguments: [payload.assetType],
         arguments: [
           tx.object(payload.vaultId),
           tx.pure.vector(
             "u8",
-            Array.from(new TextEncoder().encode(payload.assetName))
+            Array.from(new TextEncoder().encode(payload.assetName)),
           ),
           tx.object("0x6"),
         ],
+      });
+
+      tx.moveCall({
+        target: "0x2::transfer::public_transfer",
+        typeArguments: [payload.assetType],
+        arguments: [asset, tx.pure.address(payload.ownerAddress)],
       });
 
       return new Promise((resolve, reject) => {
@@ -184,7 +193,7 @@ export function useWithdrawAsset({
               resolve(result.digest);
             },
             onError: reject,
-          }
+          },
         );
       });
     },
@@ -217,7 +226,7 @@ export function useDestroyVault({
               resolve();
             },
             onError: reject,
-          }
+          },
         );
       });
     },
@@ -394,7 +403,7 @@ export function useBorrowMutAsset({
         ],
         typeArguments: [payload.assetType],
       });
-      
+
       const [assetRef] = tx.moveCall({
         target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::borrow_mut_asset`,
         arguments: [
@@ -416,7 +425,7 @@ export function useBorrowMutAsset({
               resolve(result.digest);
             },
             onError: reject,
-          }
+          },
         );
       });
     },

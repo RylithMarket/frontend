@@ -1,4 +1,4 @@
-import { defineRecipe } from "@chakra-ui/react"
+import { defineRecipe } from "@chakra-ui/react";
 
 export const inputRecipe = defineRecipe({
   className: "chakra-input",
@@ -9,7 +9,7 @@ export const inputRecipe = defineRecipe({
     position: "relative",
     appearance: "none",
     textAlign: "start",
-    borderRadius: "l2",
+    borderRadius: "full",
     _disabled: {
       layerStyle: "disabled",
     },
@@ -96,4 +96,4 @@ export const inputRecipe = defineRecipe({
     size: "md",
     variant: "outline",
   },
-})
+});
