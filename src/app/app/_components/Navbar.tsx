@@ -12,13 +12,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FaSuperpowers } from "react-icons/fa";
 import { PiVaultFill } from "react-icons/pi";
+import { motion } from "motion/react";
 
 interface Props extends HTMLChakraProps<"nav"> {}
 export function Navbar(props: Props) {
   const pathname = usePathname();
   const items = [
-    { label: "vaults", href: "/app/vaults", icon: PiVaultFill },
-    { label: "marketplace", href: "/app/marketplace", icon: FaSuperpowers },
+    { label: "vaults", href: "/vaults", icon: PiVaultFill },
+    { label: "marketplace", href: "/marketplace", icon: FaSuperpowers },
   ];
 
   const isActive = (href: string) => {
@@ -36,22 +37,28 @@ export function Navbar(props: Props) {
       {...props}
     >
       <Stack gap={"4"} direction={["row", "row", "column", "column"]}>
-        {items.map((item) => (
-          <IconButton
+        {items.map((item, index) => (
+          <motion.div
             key={item.label}
-            aria-label={item.label}
-            bg={isActive(item.href) ? "bg.subtle/50" : "transparent"}
-            color={isActive(item.href) ? "fg" : "fg.subtle"}
-            _hover={{ bg: "bg.subtle", color: "fg" }}
-            border={isActive(item.href) ? "1px solid" : "none"}
-            borderColor={"fg.subtle"}
-            size={["sm", "md", "md"]}
-            asChild
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2, delay: index * 0.05, ease: "easeOut" }}
           >
-            <Link href={item.href}>
-              <Icon as={item.icon} />
-            </Link>
-          </IconButton>
+            <IconButton
+              aria-label={item.label}
+              bg={isActive(item.href) ? "bg.subtle/50" : "transparent"}
+              color={isActive(item.href) ? "fg" : "fg.subtle"}
+              _hover={{ bg: "bg.subtle", color: "fg" }}
+              border={isActive(item.href) ? "1px solid" : "none"}
+              borderColor={"fg.subtle"}
+              size={["sm", "md", "md"]}
+              asChild
+            >
+              <Link href={item.href}>
+                <Icon as={item.icon} />
+              </Link>
+            </IconButton>
+          </motion.div>
         ))}
       </Stack>
     </chakra.nav>

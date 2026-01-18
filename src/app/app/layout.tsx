@@ -1,5 +1,14 @@
 import { Center, Flex, HStack } from "@chakra-ui/react";
 import { Navbar } from "./_components/Navbar";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | Rylith",
+    default: "Dashboard | Rylith",
+  },
+  description: "Manage your DeFi strategies and portfolio on Rylith.",
+};
 
 export default function Layout(props: React.PropsWithChildren) {
   return (

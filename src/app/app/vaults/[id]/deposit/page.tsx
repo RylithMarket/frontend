@@ -3,7 +3,7 @@ import { PageWrapper } from "@/app/app/_components/PageWrapper";
 import { VaultDepositContent } from "./_components/VaultDepositContent";
 
 export const metadata: Metadata = {
-  title: "Add Funds | Rylith",
+  title: "Add Funds",
   description: "Inject capital to execute strategy and generate yield.",
 };
 

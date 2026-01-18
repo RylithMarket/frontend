@@ -49,7 +49,6 @@ export async function proxy(request: NextRequest) {
 
   const subdomain = extractSubdomain(request);
 
-
   if (!subdomain) {
     if (pathname.startsWith("/app")) {
       const url = request.nextUrl.clone();
@@ -69,17 +68,16 @@ export async function proxy(request: NextRequest) {
 
   if (subdomain === "app") {
     const url = request.nextUrl.clone();
+    if (pathname === "/") {
+      url.pathname = "/vaults";
+      return NextResponse.redirect(url);
+    }
 
     if (pathname.startsWith("/app")) {
       return NextResponse.rewrite(url);
     }
 
-    if (pathname === "/") {
-      url.pathname = "/app";
-    } else {
-      url.pathname = `/app${pathname}`;
-    }
-
+    url.pathname = `/app${pathname}`;
     return NextResponse.rewrite(url);
   }
 

@@ -3,12 +3,8 @@ import { PageWrapper } from "../_components/PageWrapper";
 import { MarketplaceList } from "./_components/MarketplaceList";
 
 export const metadata: Metadata = {
-  title: "Explore Strategies | Rylith",
+  title: "Explore Strategies",
   description: "Discover and trade high-performing DeFi strategy vaults.",
-  openGraph: {
-    title: "Explore Strategies | Rylith",
-    description: "Discover and trade high-performing DeFi strategy vaults.",
-  },
 };
 
 export default function Page() {

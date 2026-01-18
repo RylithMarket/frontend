@@ -15,6 +15,7 @@ import {
   LinkBox,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { motion } from "motion/react";
 
 interface Props extends StackProps {
   vault: VaultData;
@@ -100,28 +101,35 @@ function Details({ vault, ...props }: { vault: VaultData } & StackProps) {
 
 export function VaultCard({ vault, ...props }: Props) {
   return (
-    <LinkBox
-      as={HStack}
-      bg={"bg.subtle/50"}
-      h={"fit"}
-      p={"2"}
-      rounded={"3xl"}
-      gap={"4"}
-      align={"center"}
-      cursor={"pointer"}
-      transition={"all 0.2s ease"}
-      maxW={"md"}
-      w={"full"}
-      _hover={{
-        bg: "bg.subtle",
-        transform: "translateY(-2px)",
-        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-      }}
-      {...props}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      whileHover={{ y: -4 }}
+      style={{ width: "100%" }}
     >
-      <VaultImage vault={vault} />
-      <Details vault={vault} />
-      <LinkOverlay href={`/app/vaults/${vault.id}`} />
-    </LinkBox>
+      <LinkBox
+        as={HStack}
+        bg={"bg.subtle/50"}
+        h={"fit"}
+        p={"2"}
+        rounded={"3xl"}
+        gap={"4"}
+        align={"center"}
+        cursor={"pointer"}
+        transition={"all 0.2s ease"}
+        maxW={"md"}
+        w={"full"}
+        _hover={{
+          bg: "bg.subtle",
+          boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+        }}
+        {...props}
+      >
+        <VaultImage vault={vault} />
+        <Details vault={vault} />
+        <LinkOverlay href={`/app/vaults/${vault.id}`} />
+      </LinkBox>
+    </motion.div>
   );
 }

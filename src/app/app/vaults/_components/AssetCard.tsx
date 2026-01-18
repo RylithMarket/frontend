@@ -1,7 +1,7 @@
 import { TagProps } from "@/components/ui/tag";
 import { SUI_EXPLORER_URL } from "@/constants";
 import { VaultPosition } from "@/hooks/use-rylith-api";
-import { formatAddress } from "@/libs/formats";
+import { formatAddress, formatType } from "@/libs/formats";
 import { formatUsdValue } from "@/libs/formatNumber";
 import {
   HStack,
@@ -15,6 +15,7 @@ import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { useWithdrawAsset } from "@/hooks/use-core-contracts";
 import { useParams } from "next/navigation";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface Props extends StackProps {
   asset: VaultPosition;
@@ -48,9 +49,11 @@ export function AssetCard({ asset, ownerAddress, ...props }: Props) {
         >
           {formatAddress(asset.objectId)}
         </Link>
-        <Text fontSize={"sm"} color={"fg.subtle"}>
-          {asset.type}
-        </Text>
+        <Tooltip content={asset.type}>
+          <Text fontSize={"xs"} color={"fg.subtle"} cursor={"pointer"}>
+            {formatType(asset.type)}
+          </Text>
+        </Tooltip>
         <ProtocolTag protocol={asset.protocol} />
       </VStack>
       <VStack align={"end"}>

@@ -5,12 +5,8 @@ import { VaultList } from "./_components/VaultList";
 import { MintLinkButton } from "./_components/MintLinkButton";
 
 export const metadata: Metadata = {
-  title: "My Portfolio | Rylith",
+  title: "My Portfolio",
   description: "Track your active strategies and manage PnL performance.",
-  openGraph: {
-    title: "My Portfolio | Rylith",
-    description: "Track your active strategies and manage PnL performance.",
-  },
 };
 
 export default function Home() {

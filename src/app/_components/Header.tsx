@@ -1,6 +1,7 @@
 "use client";
 
 import { Favicon } from "@/components/brands";
+import { ROOT_DOMAIN } from "@/constants";
 import {
   chakra,
   Flex,
@@ -8,19 +9,29 @@ import {
   HStack,
   HTMLChakraProps,
   Link,
+  LinkOverlay,
   StackProps,
   Text,
 } from "@chakra-ui/react";
 import { ConnectWallet } from "./ConnectWallet";
 
-const Logo = (props: StackProps) => (
-  <HStack {...props}>
-    <Favicon />
-    <Text fontSize="lg" fontWeight="bold" textTransform="uppercase">
-      Rylith Market
-    </Text>
-  </HStack>
-);
+const Logo = (props: StackProps) => {
+  const homeUrl =
+    typeof window !== "undefined"
+      ? `${window.location.protocol}//${ROOT_DOMAIN}`
+      : "/";
+
+  return (
+    <LinkOverlay href={homeUrl}>
+      <HStack {...props}>
+        <Favicon />
+        <Text fontSize="lg" fontWeight="bold" textTransform="uppercase">
+          Rylith Market
+        </Text>
+      </HStack>
+    </LinkOverlay>
+  );
+};
 
 const Navigation = (props: StackProps) => {
   const items = [

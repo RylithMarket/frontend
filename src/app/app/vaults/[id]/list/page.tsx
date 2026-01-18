@@ -3,7 +3,7 @@ import { PageWrapper } from "@/app/app/_components/PageWrapper";
 import { VaultListContent } from "./_components/VaultListContent";
 
 export const metadata: Metadata = {
-  title: "Sell Vault | Rylith",
+  title: "Sell Vault",
   description: "List your vault for sale to monetize your position.",
 };
 

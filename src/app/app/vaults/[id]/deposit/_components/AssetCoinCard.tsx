@@ -18,6 +18,7 @@ import { useMemo, useState } from "react";
 import { useSuiClient } from "@mysten/dapp-kit";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "motion/react";
 
 interface Props extends StackProps {
   coin: CoinStruct;
@@ -101,47 +102,54 @@ export function AssetCoinCard({ coin, vaultId, ...props }: Props) {
   }
 
   return (
-    <VStack w={"full"} align={"stretch"} gap={2} {...props}>
-      <HStack w={"full"} align={["center", "start"]} gap={[2, 3]}>
-        <VStack w={"full"} align={"start"} gap={0} flex={1} minW={0}>
-          <Link
-            href={`${SUI_EXPLORER_URL}/object/${coin.coinObjectId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            fontSize={["xs", "sm"]}
-            truncate
-          >
-            {coinSymbol}
-          </Link>
-          <Text fontSize={"xs"} color={"fg.subtle"} truncate>
-            {formatAddress(coinAddress)}::{coinModule}::{coinSymbol}
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      style={{ width: "100%" }}
+    >
+      <VStack w={"full"} align={"stretch"} gap={2} {...props}>
+        <HStack w={"full"} align={["center", "start"]} gap={[2, 3]}>
+          <VStack w={"full"} align={"start"} gap={0} flex={1} minW={0}>
+            <Link
+              href={`${SUI_EXPLORER_URL}/object/${coin.coinObjectId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              fontSize={["xs", "sm"]}
+              truncate
+            >
+              {coinSymbol}
+            </Link>
+            <Text fontSize={"xs"} color={"fg.subtle"} truncate>
+              {formatAddress(coinAddress)}::{coinModule}::{coinSymbol}
+            </Text>
+          </VStack>
+          <Text fontSize={"xs"} color={"primary"} mt={[0, 1]} flexShrink={0}>
+            {balance}
           </Text>
-        </VStack>
-        <Text fontSize={"xs"} color={"primary"} mt={[0, 1]} flexShrink={0}>
-          {balance}
-        </Text>
-      </HStack>
-      <HStack w={"full"} gap={[1, 2]} align={"end"}>
-        <Input
-          placeholder="Amount"
-          variant="subtle"
-          px={["1", "2"]}
-          type="number"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          flex={1}
-          size={["xs", "sm"]}
-        />
-        <Button
-          onClick={handleDeposit}
-          loading={depositMutation.isPending}
-          disabled={depositMutation.isPending || !amount}
-          size={["xs", "sm"]}
-          flexShrink={0}
-        >
-          Deposit
-        </Button>
-      </HStack>
-    </VStack>
+        </HStack>
+        <HStack w={"full"} gap={[1, 2]} align={"end"}>
+          <Input
+            placeholder="Amount"
+            variant="subtle"
+            px={["1", "2"]}
+            type="number"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            flex={1}
+            size={["xs", "sm"]}
+          />
+          <Button
+            onClick={handleDeposit}
+            loading={depositMutation.isPending}
+            disabled={depositMutation.isPending || !amount}
+            size={["xs", "sm"]}
+            flexShrink={0}
+          >
+            Deposit
+          </Button>
+        </HStack>
+      </VStack>
+    </motion.div>
   );
 }
