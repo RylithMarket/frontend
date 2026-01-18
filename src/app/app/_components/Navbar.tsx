@@ -47,6 +47,7 @@ export function Navbar(props: Props) {
               aria-label={item.label}
               bg={isActive(item.href) ? "bg.subtle/50" : "transparent"}
               color={isActive(item.href) ? "fg" : "fg.subtle"}
+              animation={"all 0.2s ease-in-out"}
               _hover={{ bg: "bg.subtle", color: "fg" }}
               border={isActive(item.href) ? "1px solid" : "none"}
               borderColor={"fg.subtle"}

@@ -53,7 +53,8 @@ export async function proxy(request: NextRequest) {
     if (pathname.startsWith("/app")) {
       const url = request.nextUrl.clone();
       const newPathname = pathname.replace(/^\/app/, "") || "/";
-      const newHost = `app.${host}`;
+      const rootDomainFormatted = ROOT_DOMAIN.split(":")[0];
+      const newHost = `app.${rootDomainFormatted}`;
 
       return NextResponse.redirect(`${url.protocol}//${newHost}${newPathname}`);
     }

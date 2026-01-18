@@ -11,6 +11,8 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { motion } from "motion/react";
+import { TypeAnimation } from "react-type-animation";
+import NextImage from "next/image";
 import Link from "next/link";
 
 interface Props extends HTMLChakraProps<"section"> {}
@@ -40,8 +42,17 @@ export function HeroSection(props: Props) {
               textAlign="center"
               maxW={"10ch"}
               mx="auto"
+              minH={["8rem", "12rem", "16rem"]}
             >
-              Liquid Strategy Marketplace
+              <TypeAnimation
+                sequence={["Liquid Strategy Marketplace", 1000]}
+                wrapper="span"
+                speed={50}
+                style={{
+                  display: "inline-block",
+                  whiteSpace: "pre-wrap",
+                }}
+              />
             </Heading>
           </motion.div>
           <motion.div
@@ -89,6 +100,18 @@ export function HeroSection(props: Props) {
           </HStack>
         </motion.div>
       </VStack>
+      <NextImage
+        src={"assets/suifm-typography.svg"}
+        alt="SuiFM Typography"
+        width={256 / 2}
+        height={173 / 2}
+        sizes="100vw"
+        style={{
+          position: "fixed",
+          bottom: 32,
+          right: 32,
+        }}
+      />
     </chakra.section>
   );
 }

@@ -28,6 +28,7 @@
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.0",
     "react-icons": "^5.5.0",
+    "react-type-animation": "^3.2.0",
     "satori": "^0.19.1",
     "sharp": "^0.34.5"
   },

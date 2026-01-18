@@ -9,7 +9,6 @@ import {
   HStack,
   HTMLChakraProps,
   Link,
-  LinkOverlay,
   StackProps,
   Text,
 } from "@chakra-ui/react";
@@ -22,14 +21,14 @@ const Logo = (props: StackProps) => {
       : "/";
 
   return (
-    <LinkOverlay href={homeUrl}>
+    <Link href={homeUrl}>
       <HStack {...props}>
         <Favicon />
         <Text fontSize="lg" fontWeight="bold" textTransform="uppercase">
           Rylith Market
         </Text>
       </HStack>
-    </LinkOverlay>
+    </Link>
   );
 };
 

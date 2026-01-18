@@ -12,6 +12,7 @@ import {
   TagRoot,
   Text,
   VStack,
+  Icon,
 } from "@chakra-ui/react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,8 @@ import {
   PopoverRoot,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { motion } from "motion/react";
+import { AiOutlineMinus } from "react-icons/ai";
 
 interface Props extends StackProps {
   asset: VaultPosition;
@@ -32,6 +35,7 @@ interface Props extends StackProps {
 }
 export function AssetCard({ asset, ownerAddress, ...props }: Props) {
   const [isOpen, setIsOpen] = useState<string | null>(null);
+  const [isDepositHovered, setIsDepositHovered] = useState(false);
   const withdrawMutation = useWithdrawAsset();
   const params = useParams();
   const vaultId = params.id as string;
@@ -53,7 +57,7 @@ export function AssetCard({ asset, ownerAddress, ...props }: Props) {
   const [expandedAction, setExpandedAction] = useState<string | null>(null);
 
   return (
-    <VStack w={"full"} align={"start"} gap={2} {...props}>
+    <VStack w={"full"} align={"start"} gap={"2"} {...props}>
       <HStack w={"full"} align={"start"}>
         <VStack w={"full"} align={"start"}>
           <Link
@@ -70,18 +74,68 @@ export function AssetCard({ asset, ownerAddress, ...props }: Props) {
           </Tooltip>
           <ProtocolTag protocol={asset.protocol} />
         </VStack>
-        <VStack align={"end"} gap={2}>
+        <VStack align={"end"} gap={"2"}>
           <Text fontWeight={"semibold"}>{formatUsdValue(asset.valueUsd)}</Text>
-          <HStack gap={2}>
-            <Button
-              colorPalette={"primary"}
-              onClick={handleWithdraw}
-              loading={withdrawMutation.isPending}
-              disabled={withdrawMutation.isPending || !asset.assetName}
-              size={"sm"}
+          <HStack gap={"4"}>
+            <motion.div
+              onHoverStart={() => setIsDepositHovered(true)}
+              onHoverEnd={() => setIsDepositHovered(false)}
+              animate={{
+                width: isDepositHovered ? "80px" : "28px",
+              }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 25,
+              }}
+              style={{ flexShrink: 0 }}
             >
-              Withdraw
-            </Button>
+              <Button
+                colorPalette={"primary"}
+                onClick={handleWithdraw}
+                loading={withdrawMutation.isPending}
+                disabled={withdrawMutation.isPending || !asset.assetName}
+                size={"sm"}
+                width="100%"
+                padding={isDepositHovered ? undefined : "0"}
+                justifyContent="center"
+                overflow="hidden"
+              >
+                <motion.div
+                  animate={{
+                    opacity: isDepositHovered ? 1 : 0,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 25,
+                  }}
+                  style={{
+                    display: isDepositHovered ? "block" : "none",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Withdraw
+                </motion.div>
+                <motion.div
+                  animate={{
+                    opacity: isDepositHovered ? 0 : 1,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 25,
+                  }}
+                  style={{
+                    display: isDepositHovered ? "none" : "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon as={AiOutlineMinus} />
+                </motion.div>
+              </Button>
+            </motion.div>
             {isCetus && (
               <Button
                 variant={"outline"}
@@ -90,7 +144,35 @@ export function AssetCard({ asset, ownerAddress, ...props }: Props) {
                 }
                 size={"sm"}
               >
-                {expandedAction === "cetus" ? "Hide" : "Actions"}
+                {expandedAction === "cetus" ? (
+                  <motion.div
+                    key="hide"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 200,
+                      damping: 20,
+                    }}
+                  >
+                    Hide
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="actions"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 200,
+                      damping: 20,
+                    }}
+                  >
+                    Actions
+                  </motion.div>
+                )}
               </Button>
             )}
           </HStack>
@@ -98,48 +180,59 @@ export function AssetCard({ asset, ownerAddress, ...props }: Props) {
       </HStack>
 
       {expandedAction === "cetus" && isCetus && (
-        <HStack w={"full"} gap={2} pl={4}>
-          <PopoverRoot
-            open={isOpen === "add"}
-            onOpenChange={(e) => setIsOpen(e.open ? "add" : null)}
-          >
-            <PopoverTrigger asChild>
-              <Button // @todo implement remove liquidity
-                disabled={true}
-                variant={"outline"}
-                size={"sm"}
-              >
-                Add Liquidity
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent>
-              <PopoverBody>
-                <CetusActionsPopover />
-              </PopoverBody>
-            </PopoverContent>
-          </PopoverRoot>
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{
+            type: "spring",
+            stiffness: 150,
+            damping: 20,
+          }}
+        >
+          <HStack w={"full"} gap={"2"} pl={"4"}>
+            <PopoverRoot
+              open={isOpen === "add"}
+              onOpenChange={(e) => setIsOpen(e.open ? "add" : null)}
+            >
+              <PopoverTrigger asChild>
+                <Button // @todo implement remove liquidity
+                  disabled={true}
+                  variant={"outline"}
+                  size={"sm"}
+                >
+                  Add Liquidity
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverBody>
+                  <CetusActionsPopover />
+                </PopoverBody>
+              </PopoverContent>
+            </PopoverRoot>
 
-          <PopoverRoot
-            open={isOpen === "remove"}
-            onOpenChange={(e) => setIsOpen(e.open ? "remove" : null)}
-          >
-            <PopoverTrigger asChild>
-              <Button
-                // @todo implement remove liquidity
-                disabled={true}
-                variant={"outline"}
-                size={"sm"}
-              >
-                Remove Liquidity
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent>
-              <PopoverBody>
-                <CetusActionsPopover />
-              </PopoverBody>
-            </PopoverContent>
-          </PopoverRoot>
-        </HStack>
+            <PopoverRoot
+              open={isOpen === "remove"}
+              onOpenChange={(e) => setIsOpen(e.open ? "remove" : null)}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  // @todo implement remove liquidity
+                  disabled={true}
+                  variant={"outline"}
+                  size={"sm"}
+                >
+                  Remove Liquidity
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <PopoverBody>
+                  <CetusActionsPopover />
+                </PopoverBody>
+              </PopoverContent>
+            </PopoverRoot>
+          </HStack>
+        </motion.div>
       )}
     </VStack>
   );
