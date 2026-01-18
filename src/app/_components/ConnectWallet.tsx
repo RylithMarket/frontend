@@ -68,7 +68,6 @@ export function WrapperMenu(props: WrapperProps) {
 interface BalanceProps extends StackProps {}
 export function BalanceMenu(props: BalanceProps) {
   const currentAccount = useCurrentAccount();
-  const { currentWallet } = useCurrentWallet();
   const { data: balance } = useSuiBalance();
 
   if (!currentAccount) {

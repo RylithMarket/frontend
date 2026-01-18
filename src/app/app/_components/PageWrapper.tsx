@@ -11,10 +11,7 @@ import {
   Icon,
 } from "@chakra-ui/react";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  IoChevronBackCircleOutline,
-  IoChevronBackOutline,
-} from "react-icons/io5";
+import { IoChevronBackOutline } from "react-icons/io5";
 
 interface Props extends StackProps {
   name?: string;

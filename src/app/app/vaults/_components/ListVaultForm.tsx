@@ -43,7 +43,7 @@ export function ListVaultForm({ vaultId, ...props }: Props) {
     register,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
+    formState: { isValid },
     setValue,
   } = useForm<Inputs>();
 

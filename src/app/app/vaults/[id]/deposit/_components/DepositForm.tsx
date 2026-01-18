@@ -5,7 +5,6 @@ import {
   Text,
   VStack,
   Skeleton,
-  Tabs,
   TabsRoot,
   TabsList,
   TabsTrigger,

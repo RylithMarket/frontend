@@ -76,7 +76,6 @@ function VaultImage({
 }
 
 function Actions({
-  vault,
   listing,
   ...props
 }: { vault: VaultData; listing: ListedVaultItem } & StackProps) {

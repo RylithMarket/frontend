@@ -6,7 +6,6 @@ import {
   Icon,
   IconButton,
   Stack,
-  VStack,
 } from "@chakra-ui/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

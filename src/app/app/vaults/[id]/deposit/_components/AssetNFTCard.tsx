@@ -8,8 +8,6 @@ import {
   StackProps,
   Text,
   VStack,
-  Image,
-  Box,
 } from "@chakra-ui/react";
 import { Button } from "@/components/ui/button";
 import { useDepositAsset } from "@/hooks/use-core-contracts";

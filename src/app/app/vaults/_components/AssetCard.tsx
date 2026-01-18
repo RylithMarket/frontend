@@ -1,3 +1,5 @@
+"use client";
+
 import { TagProps } from "@/components/ui/tag";
 import { SUI_EXPLORER_URL } from "@/constants";
 import { VaultPosition } from "@/hooks/use-rylith-api";
@@ -11,17 +13,25 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useWithdrawAsset } from "@/hooks/use-core-contracts";
 import { useParams } from "next/navigation";
 import { Tooltip } from "@/components/ui/tooltip";
+import { CetusActionsPopover } from "./cetus/CetusActionsPopover";
+import {
+  PopoverBody,
+  PopoverContent,
+  PopoverRoot,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface Props extends StackProps {
   asset: VaultPosition;
   ownerAddress: string;
 }
 export function AssetCard({ asset, ownerAddress, ...props }: Props) {
+  const [isOpen, setIsOpen] = useState<string | null>(null);
   const withdrawMutation = useWithdrawAsset();
   const params = useParams();
   const vaultId = params.id as string;
@@ -39,36 +49,99 @@ export function AssetCard({ asset, ownerAddress, ...props }: Props) {
     });
   };
 
+  const isCetus = asset.protocol === "Cetus";
+  const [expandedAction, setExpandedAction] = useState<string | null>(null);
+
   return (
-    <HStack w={"full"} align={"start"} {...props}>
-      <VStack w={"full"} align={"start"}>
-        <Link
-          href={`${SUI_EXPLORER_URL}/object/${asset.objectId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {formatAddress(asset.objectId)}
-        </Link>
-        <Tooltip content={asset.type}>
-          <Text fontSize={"xs"} color={"fg.subtle"} cursor={"pointer"}>
-            {formatType(asset.type)}
-          </Text>
-        </Tooltip>
-        <ProtocolTag protocol={asset.protocol} />
-      </VStack>
-      <VStack align={"end"}>
-        <Text fontWeight={"semibold"}>{formatUsdValue(asset.valueUsd)}</Text>
-        <Button
-          colorPalette={"primary"}
-          onClick={handleWithdraw}
-          loading={withdrawMutation.isPending}
-          disabled={withdrawMutation.isPending || !asset.assetName}
-          size={"sm"}
-        >
-          Withdraw
-        </Button>
-      </VStack>
-    </HStack>
+    <VStack w={"full"} align={"start"} gap={2} {...props}>
+      <HStack w={"full"} align={"start"}>
+        <VStack w={"full"} align={"start"}>
+          <Link
+            href={`${SUI_EXPLORER_URL}/object/${asset.objectId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {formatAddress(asset.objectId)}
+          </Link>
+          <Tooltip content={asset.type}>
+            <Text fontSize={"xs"} color={"fg.subtle"} cursor={"pointer"}>
+              {formatType(asset.type)}
+            </Text>
+          </Tooltip>
+          <ProtocolTag protocol={asset.protocol} />
+        </VStack>
+        <VStack align={"end"} gap={2}>
+          <Text fontWeight={"semibold"}>{formatUsdValue(asset.valueUsd)}</Text>
+          <HStack gap={2}>
+            <Button
+              colorPalette={"primary"}
+              onClick={handleWithdraw}
+              loading={withdrawMutation.isPending}
+              disabled={withdrawMutation.isPending || !asset.assetName}
+              size={"sm"}
+            >
+              Withdraw
+            </Button>
+            {isCetus && (
+              <Button
+                variant={"outline"}
+                onClick={() =>
+                  setExpandedAction(expandedAction ? null : "cetus")
+                }
+                size={"sm"}
+              >
+                {expandedAction === "cetus" ? "Hide" : "Actions"}
+              </Button>
+            )}
+          </HStack>
+        </VStack>
+      </HStack>
+
+      {expandedAction === "cetus" && isCetus && (
+        <HStack w={"full"} gap={2} pl={4}>
+          <PopoverRoot
+            open={isOpen === "add"}
+            onOpenChange={(e) => setIsOpen(e.open ? "add" : null)}
+          >
+            <PopoverTrigger asChild>
+              <Button // @todo implement remove liquidity
+                disabled={true}
+                variant={"outline"}
+                size={"sm"}
+              >
+                Add Liquidity
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverBody>
+                <CetusActionsPopover />
+              </PopoverBody>
+            </PopoverContent>
+          </PopoverRoot>
+
+          <PopoverRoot
+            open={isOpen === "remove"}
+            onOpenChange={(e) => setIsOpen(e.open ? "remove" : null)}
+          >
+            <PopoverTrigger asChild>
+              <Button
+                // @todo implement remove liquidity
+                disabled={true}
+                variant={"outline"}
+                size={"sm"}
+              >
+                Remove Liquidity
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverBody>
+                <CetusActionsPopover />
+              </PopoverBody>
+            </PopoverContent>
+          </PopoverRoot>
+        </HStack>
+      )}
+    </VStack>
   );
 }
 

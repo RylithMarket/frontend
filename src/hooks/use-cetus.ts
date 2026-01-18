@@ -11,9 +11,9 @@ import { HookProps, MutationHooksOptions } from "./types";
 import { Transaction } from "@mysten/sui/transactions";
 import { useBorrowMutAsset } from "./use-core-contracts";
 import { cetusSdk } from "@/utils/cetusSdk";
-import { RemoveLiquidityParams } from "@cetusprotocol/sui-clmm-sdk";
 import { VAULT_CONTRACT } from "@/constants";
 import { toaster } from "@/components/ui/toaster";
+import { suiClient } from "@/utils/suiClient";
 
 interface RemoveLiquidityFromVaultPayload {
   vaultId: string;
@@ -27,14 +27,6 @@ interface RemoveLiquidityFromVaultPayload {
   minAmountB: string;
   collectFee?: boolean;
   rewarderCoinTypes?: string[];
-}
-
-interface AddLiquidityPayload {
-  poolId: string;
-  coinAAmount: string;
-  coinBAmount: string;
-  tickLower: number;
-  tickUpper: number;
 }
 
 export function useCetusRemoveLiquidityFromVault({
@@ -65,8 +57,8 @@ export function useCetusRemoveLiquidityFromVault({
         target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::withdraw_asset`,
         arguments: [
           tx.object(payload.vaultId),
-          tx.pure.string(payload.positionName), // vector<u8>
-          tx.object("0x6"), // Clock
+          tx.pure.string(payload.positionName),
+          tx.object("0x6"),
         ],
         typeArguments: [`${cetusPackageId}::position::Position`],
       });
@@ -98,7 +90,7 @@ export function useCetusRemoveLiquidityFromVault({
         target: `${VAULT_CONTRACT.packageId}::${VAULT_CONTRACT.moduleName}::deposit_asset`,
         arguments: [
           tx.object(payload.vaultId),
-          position, // Nạp lại chính object đó
+          position,
           tx.pure.string(payload.positionName),
           tx.object("0x6"),
         ],
@@ -111,7 +103,6 @@ export function useCetusRemoveLiquidityFromVault({
         typeArguments: [payload.coinTypeA],
       });
 
-      // 4. Xử lý Balance B: Tương tự
       const [coinB] = tx.moveCall({
         target: `0x2::coin::from_balance`,
         arguments: [balanceB],
@@ -161,16 +152,11 @@ export function useCetusRemoveLiquidityFromVault({
 interface AddLiquidityToVaultPayload {
   vaultId: string;
   positionName: string;
-  poolId: string;
-  coinTypeA: string;
-  coinTypeB: string;
+  positionId: string;
 
   deltaLiquidity: string;
   maxAmountA: string;
   maxAmountB: string;
-
-  inputCoinAId: string;
-  inputCoinBId: string;
 }
 
 export function useCetusAddLiquidityToVault({
@@ -188,6 +174,9 @@ export function useCetusAddLiquidityToVault({
       if (!currentAccount) throw new Error("No connected account");
 
       const tx = new Transaction();
+      const positionData = await cetusSdk.Position.getPositionById(
+        payload.positionId,
+      );
 
       const cetusPackageId = cetusSdk.sdkOptions.clmm_pool.package_id;
       const globalConfig =
@@ -197,12 +186,81 @@ export function useCetusAddLiquidityToVault({
         throw new Error("Cetus global config not found");
       }
 
-      const [coinAInput] = tx.splitCoins(tx.object(payload.inputCoinAId), [
-        tx.pure.u64(payload.maxAmountA),
-      ]);
+      const poolData = await cetusSdk.Pool.getPool(positionData.pool);
 
-      const [coinBInput] = tx.splitCoins(tx.object(payload.inputCoinBId), [
-        tx.pure.u64(payload.maxAmountB),
+      const coinTypeA = poolData.coin_type_a;
+      const coinTypeB = poolData.coin_type_b;
+
+      const getCoinInput = async (coinType: string, amountStr: string) => {
+        const amount = BigInt(amountStr);
+
+        if (coinType.endsWith("::sui::SUI")) {
+          const [coin] = tx.splitCoins(tx.gas, [tx.pure.u64(amount)]);
+          return coin;
+        }
+
+        let cursor: string | null = null;
+        const selectedCoins: string[] = [];
+        let totalBalance = BigInt(0);
+
+        do {
+          let result;
+          try {
+            result = await suiClient.getCoins({
+              owner: currentAccount.address,
+              coinType,
+              cursor,
+              limit: 10,
+            });
+          } catch (error) {
+            throw error;
+          }
+
+          const data = result.data || [];
+
+          if (data.length === 0) {
+            break;
+          }
+
+          for (const coin of data) {
+            selectedCoins.push(coin.coinObjectId);
+            totalBalance += BigInt(coin.balance);
+            if (totalBalance >= amount) break;
+          }
+
+          if (totalBalance >= amount) break;
+          cursor = result.nextCursor || null;
+        } while (cursor);
+
+        if (totalBalance < amount) {
+          throw new Error(
+            `Insufficient balance for ${coinType}. Required: ${amount}, Available: ${totalBalance}`,
+          );
+        }
+
+        if (selectedCoins.length === 0) {
+          throw new Error(`No coins found for ${coinType}`);
+        }
+
+        // Xử lý Gộp Coin (Merge) trong Transaction
+        const primaryCoinId = selectedCoins[0];
+
+        if (selectedCoins.length > 1) {
+          tx.mergeCoins(
+            tx.object(primaryCoinId),
+            selectedCoins.slice(1).map((id) => tx.object(id)),
+          );
+        }
+
+        const [coinInput] = tx.splitCoins(tx.object(primaryCoinId), [
+          tx.pure.u64(amount),
+        ]);
+        return coinInput;
+      };
+
+      const [coinAInput, coinBInput] = await Promise.all([
+        getCoinInput(coinTypeA, payload.maxAmountA),
+        getCoinInput(coinTypeB, payload.maxAmountB),
       ]);
 
       const [position] = tx.moveCall({
@@ -219,7 +277,7 @@ export function useCetusAddLiquidityToVault({
         target: `${cetusPackageId}::pool::add_liquidity`,
         arguments: [
           tx.object(globalConfig),
-          tx.object(payload.poolId),
+          tx.object(positionData.pool),
           position,
           tx.pure.u128(payload.deltaLiquidity),
           tx.pure.u64(payload.maxAmountA),
@@ -228,7 +286,7 @@ export function useCetusAddLiquidityToVault({
           coinBInput,
           tx.object("0x6"),
         ],
-        typeArguments: [payload.coinTypeA, payload.coinTypeB],
+        typeArguments: [coinTypeA, coinTypeB],
       });
 
       tx.moveCall({
@@ -245,13 +303,13 @@ export function useCetusAddLiquidityToVault({
       const [coinA_Change] = tx.moveCall({
         target: `0x2::coin::from_balance`,
         arguments: [balanceA_Change],
-        typeArguments: [payload.coinTypeA],
+        typeArguments: [coinTypeA],
       });
 
       const [coinB_Change] = tx.moveCall({
         target: `0x2::coin::from_balance`,
         arguments: [balanceB_Change],
-        typeArguments: [payload.coinTypeB],
+        typeArguments: [coinTypeB],
       });
 
       tx.transferObjects([coinA_Change, coinB_Change], currentAccount.address);

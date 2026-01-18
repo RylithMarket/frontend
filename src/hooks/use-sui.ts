@@ -19,19 +19,6 @@ export interface UserObject extends SuiObjectData {
   };
 }
 
-interface CoinObject {
-  coinObjectId: string;
-  version: string;
-  digest: string;
-  coinType: string;
-  [key: string]: unknown;
-}
-
-interface OwnedObjectResponse {
-  data?: Array<{ data?: SuiObjectData }>;
-  nextCursor?: string | null;
-}
-
 export function useSuiBalance(
   options?: HookProps<void, QueryHookOptions<BalanceData | null>>,
 ): UseQueryResult<BalanceData | null, Error> {
@@ -70,10 +57,6 @@ export function useSuiBalance(
 // Helper function to check if object is a coin
 function isCoin(type: string): boolean {
   return type.includes("::coin::Coin") || type.includes("0x2::coin::Coin");
-}
-
-function isNFT(type: string): boolean {
-  return !isCoin(type) && !type.includes("Package");
 }
 
 export function useGetUserCoins(
